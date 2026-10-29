@@ -92,7 +92,7 @@ private fun ConfirmLiquidContent(
 ) {
     val backdrop = rememberLayerBackdrop()
     Box(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxSize().background(Color.White).layerBackdrop(backdrop))
+        Box(Modifier.fillMaxSize().layerBackdrop(backdrop))
         LiquidDialogContent(
             backdrop = backdrop,
             title = title,

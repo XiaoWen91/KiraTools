@@ -68,6 +68,7 @@ private data class AppTab(val label: String, val icon: ImageVector)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        try { SyncService.init() } catch (_: Throwable) {}
         setContent {
             LabTheme {
                 KiraToolsApp()

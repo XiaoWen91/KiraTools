@@ -3,10 +3,12 @@ package io.github.angbang852.manjiao.ui.miuix
 import android.app.Activity
 import android.app.Dialog
 import android.content.Context
+import android.content.ContextWrapper
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.ColorDrawable
 import android.os.Handler
 import android.os.Looper
+import android.widget.Toast
 import android.view.WindowManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,15 +36,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.angbang852.manjiao.data.Prefs
+import io.github.angbang852.manjiao.data.SparkContacts
+import io.github.angbang852.manjiao.hook.SparkSender
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.SmallTitle
@@ -58,7 +65,9 @@ object InjectedMiuixPanel {
     private var current: Dialog? = null
 
     fun show(ctx: Context): Boolean {
-        val act = ctx as? Activity ?: return false
+        var c: Context? = ctx
+        while (c is ContextWrapper && c !is Activity) c = c.baseContext
+        val act = c as? Activity ?: return false
         if (current?.isShowing == true) return true
         if (Looper.myLooper() != Looper.getMainLooper()) {
             Handler(Looper.getMainLooper()).post { show(act) }
@@ -86,7 +95,7 @@ object InjectedMiuixPanel {
             }
             view.setContent {
                 InjectedTheme {
-                    InjectedScreen(dialog)
+                    InjectedScreen(act, dialog)
                 }
             }
             current = dialog
@@ -186,11 +195,13 @@ private fun InjectedTheme(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun InjectedScreen(dialog: Dialog) {
+private fun InjectedScreen(act: Activity, dialog: Dialog) {
     var category by remember { mutableStateOf<Int?>(null) }
 
     LazyColumn(
         Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .background(if (isSystemInDarkTheme()) Color(0xFF1C1C1E) else Color.White)
             .padding(horizontal = 20.dp)
             .padding(top = 18.dp, bottom = 20.dp)
     ) {
@@ -259,6 +270,39 @@ private fun InjectedScreen(dialog: Dialog) {
                     }
                 }
             }
+            if (cat.title == "续火花") {
+                item { SparkExtra() }
+            }
+            if (cat.title == "美化") {
+                item {
+                    BasicComponent(
+                        title = "区域透明度",
+                        summary = "打开滑杆设置",
+                        startAction = { IconBadge(Icons.Filled.Opacity) },
+                        endActions = {
+                            Icon(MiuixIcons.Basic.ArrowRight, contentDescription = "进入", modifier = Modifier.size(16.dp))
+                        },
+                        onClick = {
+                            dialog.dismiss()
+                            InjectedAlphaPanel.show(act)
+                        },
+                    )
+                }
+                item {
+                    BasicComponent(
+                        title = "隐藏 Tab / 视频控件",
+                        summary = "扫描并隐藏控件",
+                        startAction = { IconBadge(Icons.Filled.VisibilityOff) },
+                        endActions = {
+                            Icon(MiuixIcons.Basic.ArrowRight, contentDescription = "进入", modifier = Modifier.size(16.dp))
+                        },
+                        onClick = {
+                            dialog.dismiss()
+                            InjectedScanPanel.show(act)
+                        },
+                    )
+                }
+            }
             item { Spacer(Modifier.height(10.dp)) }
             item {
                 BasicComponent(
@@ -276,6 +320,54 @@ private fun InjectedScreen(dialog: Dialog) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun SparkExtra() {
+    val ctx = LocalContext.current
+    val dark = isSystemInDarkTheme()
+    var msg by remember { mutableStateOf(Prefs.str(Prefs.K_SPARK_MESSAGE, "")) }
+    SectionCard {
+        SmallTitle("固定消息")
+        BasicTextField(
+            value = msg,
+            onValueChange = { msg = it },
+            modifier = Modifier.fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(if (dark) Color(0xFF2C2C2E) else Color(0xFFF2F2F7))
+                .padding(12.dp),
+            textStyle = TextStyle(color = if (dark) Color.White else Color.Black, fontSize = 14.sp),
+            cursorBrush = SolidColor(Color(0xFF0A84FF)),
+        )
+        BasicComponent(
+            title = "保存消息",
+            summary = "保存固定续火花文案，留空则随机",
+            onClick = {
+                Prefs.setStrSync(ctx, Prefs.K_SPARK_MESSAGE, msg.trim())
+                Toast.makeText(ctx, "已保存", Toast.LENGTH_SHORT).show()
+            },
+        )
+        BasicComponent(
+            title = "测试续火花",
+            summary = "给已勾选好友发送测试消息",
+            onClick = {
+                val ids = SparkContacts.selectedIds()
+                if (ids.isEmpty()) {
+                    Toast.makeText(ctx, "先勾选好友", Toast.LENGTH_SHORT).show()
+                } else {
+                    val text = msg.trim().ifEmpty { "测试续火花" }
+                    var ok = 0
+                    var fail = 0
+                    for (id in ids) {
+                        val sent = SparkSender.send(ctx, id, text) { _, _ -> }
+                        if (sent) ok++ else fail++
+                    }
+                    Toast.makeText(ctx, "测试发送 ok=$ok fail=$fail", Toast.LENGTH_LONG).show()
+                }
+            },
+        )
     }
 }
 
