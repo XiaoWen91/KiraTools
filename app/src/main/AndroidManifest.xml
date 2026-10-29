@@ -1,16 +1,67 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="io.github.angbang852.manjiao.permission.PREFS_SYNC" />
+
+    <permission
+        android:name="io.github.angbang852.manjiao.permission.PREFS_SYNC"
+        android:protectionLevel="signature" />
+
+    <queries>
+        <package android:name="com.smile.gifmaker" />
+        <package android:name="com.kuaishou.nebula" />
+    </queries>
+
     <application
         android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
         android:label="KiraTools"
+        android:description="@string/module_desc"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        android:theme="@style/Theme.SlowKick">
+
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:label="KiraTools">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.APPLICATION_PREFERENCES" />
+                <category android:name="de.robv.android.xposed.category.MODULE_SETTINGS" />
+            </intent-filter>
         </activity>
+
+        <receiver
+            android:name="io.github.angbang852.manjiao.data.PrefsWriteReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="io.github.angbang852.manjiao.PREFS_WRITE" />
+                <action android:name="io.github.angbang852.manjiao.PREFS_QUERY" />
+                <action android:name="io.github.angbang852.manjiao.KEY_PULL" />
+            </intent-filter>
+        </receiver>
+
+        <provider
+            android:name="io.github.libxposed.service.XposedProvider"
+            android:authorities="${applicationId}.XposedService"
+            android:exported="true"
+            tools:ignore="ExportedContentProvider" />
+
+        <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+        <meta-data
+            android:name="xposedminversion"
+            android:value="51" />
+        <meta-data
+            android:name="xposeddescription"
+            android:value="@string/module_desc" />
     </application>
 </manifest>

@@ -24,12 +24,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -134,10 +130,6 @@ fun LiquidBottomTabs(
                 }
             )
         }
-
-        CompositionLocalProvider(
-            LocalLiquidBottomHighlightedIndex provides dampedDragAnimation.value.fastRoundToInt()
-        ) {
         LaunchedEffect(selectedTabIndex) {
             snapshotFlow { selectedTabIndex() }
                 .collectLatest { index ->
@@ -165,27 +157,6 @@ fun LiquidBottomTabs(
                 }
             )
         }
-
-        Box(
-            Modifier
-                .matchParentSize()
-                .alpha(0f)
-                .layerBackdrop(tabsBackdrop)
-                .drawBehind {
-                    val left = if (isLtr) {
-                        dampedDragAnimation.value * tabWidth
-                    } else {
-                        size.width - (dampedDragAnimation.value + 1f) * tabWidth
-                    }
-                    drawLine(
-                        color = accentColor.copy(alpha = 0.35f),
-                        start = Offset(left + tabWidth * 0.35f, size.height - 5f.dp.toPx()),
-                        end = Offset(left + tabWidth * 0.65f, size.height - 5f.dp.toPx()),
-                        strokeWidth = 2f.dp.toPx(),
-                        cap = StrokeCap.Round
-                    )
-                }
-        )
 
         Row(
             Modifier
@@ -216,6 +187,47 @@ fun LiquidBottomTabs(
             content = content
         )
 
+        CompositionLocalProvider(
+            LocalLiquidBottomTabScale provides {
+                lerp(1f, 1.2f, dampedDragAnimation.pressProgress)
+            }
+        ) {
+            Row(
+                Modifier
+                    .clearAndSetSemantics {}
+                    .alpha(0f)
+                    .layerBackdrop(tabsBackdrop)
+                    .graphicsLayer {
+                        translationX = panelOffset
+                    }
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { Capsule() },
+                        effects = {
+                            val progress = dampedDragAnimation.pressProgress
+                            vibrancy()
+                            blur(8f.dp.toPx())
+                            lens(
+                                24f.dp.toPx() * progress,
+                                24f.dp.toPx() * progress
+                            )
+                        },
+                        highlight = {
+                            val progress = dampedDragAnimation.pressProgress
+                            Highlight.Default.copy(alpha = progress)
+                        },
+                        onDrawSurface = { drawRect(containerColor) }
+                    )
+                    .then(interactiveHighlight.modifier)
+                    .height(56f.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 4f.dp)
+                    .graphicsLayer(colorFilter = ColorFilter.tint(accentColor)),
+                verticalAlignment = Alignment.CenterVertically,
+                content = content
+            )
+        }
+
         Box(
             Modifier
                 .padding(horizontal = 4f.dp)
@@ -232,8 +244,8 @@ fun LiquidBottomTabs(
                     effects = {
                         val progress = dampedDragAnimation.pressProgress
                         lens(
-                            10f.dp.toPx() * progress,
-                            14f.dp.toPx() * progress,
+                            5f.dp.toPx() * progress,
+                            7f.dp.toPx() * progress,
                             chromaticAberration = true
                         )
                     },
@@ -272,6 +284,5 @@ fun LiquidBottomTabs(
                 .height(56f.dp)
                 .fillMaxWidth(1f / tabsCount)
         )
-        }
     }
 }
