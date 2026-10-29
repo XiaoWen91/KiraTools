@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -22,6 +23,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -32,6 +35,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -86,11 +92,12 @@ private fun KiraToolsApp() {
     val light = !isSystemInDarkTheme()
     val accent = if (light) Color(0xFF0088FF) else Color(0xFF0091FF)
     val contentColor = if (light) Color.Black else Color.White
+    val pageBackground = if (light) Color(0xFFF5F5F7) else Color(0xFF0F0F10)
 
-    Box(Modifier.fillMaxSize().background(Color.White)) {
+    Box(Modifier.fillMaxSize().background(pageBackground)) {
         Box(
             Modifier.fillMaxSize()
-                .background(Color.White)
+                .background(pageBackground)
                 .layerBackdrop(backdrop)
         ) {
             if (page == 0) HomePage() else SettingsPage(onPreview = { showDialog = true })
@@ -107,7 +114,7 @@ private fun KiraToolsApp() {
             tabs.forEachIndexed { index, tab ->
                 val color = if (page == index) accent else contentColor.copy(0.7f)
                 LiquidBottomTab(onClick = { page = index }) {
-                    CanvasIcon(
+                    MaterialIcon(
                         icon = tab.icon,
                         tint = color,
                         modifier = Modifier.size(24.dp),
@@ -135,7 +142,7 @@ private fun KiraToolsApp() {
 @Composable
 private fun SectionCard(content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
-    val background = if (dark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7)
+    val background = if (dark) Color(0xFF1C1C1E) else Color.White
     Column(
         Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(22.dp))
@@ -280,12 +287,40 @@ private fun IconBadge(icon: KiraIcon) {
             .background(Color(0xFF0A84FF).copy(alpha = 0.16f)),
         contentAlignment = Alignment.Center,
     ) {
-        CanvasIcon(
+        MaterialIcon(
             icon = icon,
             tint = Color(0xFF0A84FF),
             modifier = Modifier.size(18.dp),
         )
     }
+}
+
+@Composable
+private fun MaterialIcon(
+    icon: KiraIcon,
+    tint: Color,
+    modifier: Modifier = Modifier,
+) {
+    Image(
+        painter = rememberVectorPainter(materialImageVector(icon)),
+        contentDescription = null,
+        modifier = modifier,
+        colorFilter = ColorFilter.tint(tint),
+    )
+}
+
+private fun materialImageVector(icon: KiraIcon): ImageVector = when (icon) {
+    KiraIcon.HOME -> Icons.Filled.Home
+    KiraIcon.SETTINGS -> Icons.Filled.Settings
+    KiraIcon.CLOCK -> Icons.Filled.Schedule
+    KiraIcon.PACKAGE -> Icons.Filled.Inventory2
+    KiraIcon.SPARKLE -> Icons.Filled.AutoAwesome
+    KiraIcon.DOWNLOAD -> Icons.Filled.Download
+    KiraIcon.UPLOAD -> Icons.Filled.Upload
+    KiraIcon.HEART -> Icons.Filled.Favorite
+    KiraIcon.CHAT -> Icons.Filled.Chat
+    KiraIcon.LINK -> Icons.Filled.Link
+    KiraIcon.CHEVRON -> Icons.Filled.ChevronRight
 }
 
 private fun openUrl(context: Context, url: String) {

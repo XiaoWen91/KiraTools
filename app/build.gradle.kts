@@ -47,4 +47,5 @@ dependencies {
     implementation("top.yukonga.miuix.kmp:miuix-preference-android:0.9.4")
     implementation("io.github.kyant0:backdrop:2.0.1")
     implementation("io.github.kyant0:shapes:1.2.1")
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
 }
