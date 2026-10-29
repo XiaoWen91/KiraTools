@@ -113,8 +113,8 @@ object CfhDiag {
         try {
             val seen = java.util.HashSet<Any>()
             val q = ArrayDeque<Array<Any>>()
-            q.add(arrayOf<Any>(frag, 0))
-            seen.add(frag)
+            q.add(arrayOf<Any>(frag!!, 0))
+            seen.add(frag!!)
             var vis = 0
             // ★★★ 遍历全貌统计（2026-09-24）—— 查「移除一处后屏幕仍可见」。
             //
