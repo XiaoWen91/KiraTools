@@ -48,6 +48,7 @@ import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import io.github.angbang852.kira.miuixlab.liquid.LiquidBottomTab
 import io.github.angbang852.kira.miuixlab.liquid.LiquidBottomTabs
 import io.github.angbang852.kira.miuixlab.liquid.LiquidDialogContent
+import io.github.angbang852.kira.miuixlab.liquid.LocalLiquidBottomHighlightedIndex
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.SmallTitle
@@ -111,8 +112,9 @@ private fun KiraToolsApp() {
             modifier = Modifier.align(Alignment.BottomCenter)
                 .padding(horizontal = 24.dp, vertical = 24.dp),
         ) {
+            val highlighted = LocalLiquidBottomHighlightedIndex.current
             tabs.forEachIndexed { index, tab ->
-                val color = if (page == index) accent else contentColor.copy(0.7f)
+                val color = if (highlighted == index) accent else contentColor.copy(0.7f)
                 LiquidBottomTab(onClick = { page = index }) {
                     MaterialIcon(
                         icon = tab.icon,
