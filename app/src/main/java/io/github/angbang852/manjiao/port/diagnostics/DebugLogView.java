@@ -37,6 +37,7 @@ public final class DebugLogView {
         scroll.setBackgroundColor(0xFF1E1E22);
         scroll.addView(text);
 
+        final String finalContent = content;
         AlertDialog.Builder builder = new AlertDialog.Builder(context)
                 .setTitle("KiraTools 日志")
                 .setView(scroll)
@@ -44,7 +45,7 @@ public final class DebugLogView {
                 .setNeutralButton("复制", (dialog, which) -> {
                     ClipboardManager cm = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
                     if (cm != null) {
-                        cm.setPrimaryClip(ClipData.newPlainText("KiraToolsLog", content));
+                        cm.setPrimaryClip(ClipData.newPlainText("KiraToolsLog", finalContent));
                         Toast.makeText(context, "已复制", Toast.LENGTH_SHORT).show();
                     }
                 });
