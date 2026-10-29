@@ -61,6 +61,13 @@ object InjectedAlphaPanel {
             dialog.setCanceledOnTouchOutside(true)
             dialog.window?.apply {
                 setBackgroundDrawable(ColorDrawable(AndroidColor.TRANSPARENT))
+                setWindowAnimations(android.R.style.Animation_Dialog)
+                statusBarColor = AndroidColor.TRANSPARENT
+                navigationBarColor = AndroidColor.TRANSPARENT
+                if (android.os.Build.VERSION.SDK_INT >= 29) {
+                    isStatusBarContrastEnforced = false
+                    isNavigationBarContrastEnforced = false
+                }
                 addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
                 attributes = attributes.apply {
                     dimAmount = 0.35f

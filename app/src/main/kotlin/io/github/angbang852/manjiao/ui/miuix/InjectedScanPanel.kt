@@ -18,6 +18,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -29,8 +33,10 @@ import androidx.compose.ui.unit.sp
 import io.github.angbang852.manjiao.data.Prefs
 import io.github.angbang852.manjiao.hook.ScanHideHooks
 import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.darkColorScheme
@@ -54,6 +60,13 @@ object InjectedScanPanel {
             dialog.setCanceledOnTouchOutside(true)
             dialog.window?.apply {
                 setBackgroundDrawable(ColorDrawable(AndroidColor.TRANSPARENT))
+                setWindowAnimations(android.R.style.Animation_Dialog)
+                statusBarColor = AndroidColor.TRANSPARENT
+                navigationBarColor = AndroidColor.TRANSPARENT
+                if (android.os.Build.VERSION.SDK_INT >= 29) {
+                    isStatusBarContrastEnforced = false
+                    isNavigationBarContrastEnforced = false
+                }
                 addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
                 attributes = attributes.apply {
                     dimAmount = 0.35f
@@ -126,6 +139,27 @@ private fun ScanScreen(act: Activity, dialog: Dialog) {
                 dialog.dismiss()
             },
         )
+
+        var hidden by remember { mutableStateOf(Prefs.str(Prefs.K_BEAUTY_HIDDEN_ELEMS, "")) }
+        val hiddenSet = hidden.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+        fun toggle(token: String, on: Boolean) {
+            val next = hiddenSet.toMutableSet()
+            if (on) next.add(token) else next.remove(token)
+            hidden = next.joinToString(",")
+            Prefs.setStrSync(ctx, Prefs.K_BEAUTY_HIDDEN_ELEMS, hidden)
+            ScanHideHooks.apply(act.window?.decorView)
+        }
+
+        SmallTitle("顶栏")
+        listOf("分类", "侧边栏", "游戏").forEach { label ->
+            val token = "text:$label"
+            SwitchPreference(title = label, checked = token in hiddenSet, onCheckedChange = { toggle(token, it) })
+        }
+        SmallTitle("底栏")
+        listOf("首页", "发现", "消息", "我").forEach { label ->
+            val token = "text:$label"
+            SwitchPreference(title = label, checked = token in hiddenSet, onCheckedChange = { toggle(token, it) })
+        }
 
         Spacer(Modifier.height(12.dp))
         TextButton(
