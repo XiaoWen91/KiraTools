@@ -24,10 +24,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
@@ -161,26 +158,6 @@ fun LiquidBottomTabs(
             )
         }
 
-        Box(
-            Modifier
-                .matchParentSize()
-                .alpha(0f)
-                .layerBackdrop(tabsBackdrop)
-                .drawBehind {
-                    val left = if (isLtr) {
-                        dampedDragAnimation.value * tabWidth
-                    } else {
-                        size.width - (dampedDragAnimation.value + 1f) * tabWidth
-                    }
-                    drawRoundRect(
-                        color = accentColor.copy(alpha = 0.45f),
-                        topLeft = Offset(left + 4f.dp.toPx(), 4f.dp.toPx()),
-                        size = Size(tabWidth - 8f.dp.toPx(), size.height - 8f.dp.toPx()),
-                        cornerRadius = CornerRadius(size.height / 2f)
-                    )
-                }
-        )
-
         Row(
             Modifier
                 .graphicsLayer {
@@ -194,7 +171,6 @@ fun LiquidBottomTabs(
                         blur(8f.dp.toPx())
                         lens(24f.dp.toPx(), 24f.dp.toPx())
                     },
-                    shadow = { Shadow(radius = 24.dp, color = Color.Black.copy(alpha = 0.28f)) },
                     layerBlock = {
                         val progress = dampedDragAnimation.pressProgress
                         val scale = lerp(1f, 1f + 16f.dp.toPx() / size.width, progress)
@@ -210,6 +186,47 @@ fun LiquidBottomTabs(
             verticalAlignment = Alignment.CenterVertically,
             content = content
         )
+
+        CompositionLocalProvider(
+            LocalLiquidBottomTabScale provides {
+                lerp(1f, 1.2f, dampedDragAnimation.pressProgress)
+            }
+        ) {
+            Row(
+                Modifier
+                    .clearAndSetSemantics {}
+                    .alpha(0f)
+                    .layerBackdrop(tabsBackdrop)
+                    .graphicsLayer {
+                        translationX = panelOffset
+                    }
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { Capsule() },
+                        effects = {
+                            val progress = dampedDragAnimation.pressProgress
+                            vibrancy()
+                            blur(8f.dp.toPx())
+                            lens(
+                                24f.dp.toPx() * progress,
+                                24f.dp.toPx() * progress
+                            )
+                        },
+                        highlight = {
+                            val progress = dampedDragAnimation.pressProgress
+                            Highlight.Default.copy(alpha = progress)
+                        },
+                        onDrawSurface = { drawRect(containerColor) }
+                    )
+                    .then(interactiveHighlight.modifier)
+                    .height(56f.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 4f.dp)
+                    .graphicsLayer(colorFilter = ColorFilter.tint(accentColor)),
+                verticalAlignment = Alignment.CenterVertically,
+                content = content
+            )
+        }
 
         Box(
             Modifier
