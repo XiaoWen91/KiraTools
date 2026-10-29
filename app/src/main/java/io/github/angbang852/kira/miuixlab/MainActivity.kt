@@ -424,7 +424,7 @@ private fun SettingsPage(onDialog: (String, String) -> Unit) {
                     onDialog("交流群", "交流群入口待接入。")
                 }
                 ActionRow("仓库地址", "打开 GitHub 仓库", Icons.Filled.Link) {
-                    openUrl(context, "https://github.com/XiaoWen91/XiaoWenmiux")
+                    openUrl(context, "https://github.com/XiaoWen91/KiraTools")
                 }
             }
         }
