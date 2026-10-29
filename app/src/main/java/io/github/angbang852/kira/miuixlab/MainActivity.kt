@@ -17,9 +17,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -29,14 +31,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import io.github.angbang852.kira.miuixlab.liquid.LiquidBottomTab
+import io.github.angbang852.kira.miuixlab.liquid.LiquidBottomTabs
+import io.github.angbang852.kira.miuixlab.liquid.LiquidDialogContent
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.SmallTitle
@@ -73,47 +78,64 @@ private fun LabTheme(content: @Composable () -> Unit) {
 private fun KiraToolsApp() {
     val backdrop = rememberLayerBackdrop()
     var page by remember { mutableStateOf(0) }
+    var showDialog by remember { mutableStateOf(false) }
     val tabs = listOf(
         LiquidTab(label = "首页", icon = KiraIcon.HOME),
         LiquidTab(label = "设置", icon = KiraIcon.SETTINGS),
     )
+    val light = !isSystemInDarkTheme()
+    val accent = if (light) Color(0xFF0088FF) else Color(0xFF0091FF)
+    val contentColor = if (light) Color.Black else Color.White
 
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().background(Color.White)) {
         Box(
             Modifier.fillMaxSize()
+                .background(Color.White)
                 .layerBackdrop(backdrop)
-                .background(
-                    Brush.linearGradient(
-                        listOf(
-                            Color(0xFF0B1E3A),
-                            Color(0xFF0A84FF),
-                            Color(0xFF7C4DFF),
-                        )
-                    )
-                )
         ) {
-            if (page == 0) HomePage() else SettingsPage()
+            if (page == 0) HomePage() else SettingsPage(onPreview = { showDialog = true })
         }
 
-        LiquidGlassBottomBar(
+        LiquidBottomTabs(
+            selectedTabIndex = { page },
+            onTabSelected = { page = it },
             backdrop = backdrop,
-            selectedIndex = page,
-            onSelected = { page = it },
-            tabs = tabs,
+            tabsCount = tabs.size,
             modifier = Modifier.align(Alignment.BottomCenter)
                 .padding(horizontal = 24.dp, vertical = 24.dp),
-        )
+        ) {
+            tabs.forEachIndexed { index, tab ->
+                val color = if (page == index) accent else contentColor.copy(0.7f)
+                LiquidBottomTab(onClick = { page = index }) {
+                    CanvasIcon(
+                        icon = tab.icon,
+                        tint = color,
+                        modifier = Modifier.size(24.dp),
+                    )
+                    BasicText(
+                        tab.label,
+                        style = TextStyle(color = color, fontSize = 11.sp),
+                    )
+                }
+            }
+        }
+
+        if (showDialog) {
+            LiquidDialogContent(
+                backdrop = backdrop,
+                title = "二级菜单",
+                message = "这是从 AndroidLiquidGlass 的 DialogContent 移植的二级菜单样式。",
+                onDismiss = { showDialog = false },
+                onConfirm = { showDialog = false },
+            )
+        }
     }
 }
 
 @Composable
 private fun SectionCard(content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
-    val background = if (dark) {
-        Color(0xFF1C1C1E).copy(alpha = 0.72f)
-    } else {
-        Color.White.copy(alpha = 0.82f)
-    }
+    val background = if (dark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7)
     Column(
         Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(22.dp))
@@ -128,6 +150,7 @@ private fun SectionCard(content: @Composable () -> Unit) {
 private fun HomePage() {
     Column(
         Modifier.fillMaxSize()
+            .statusBarsPadding()
             .padding(24.dp)
             .padding(bottom = 96.dp)
     ) {
@@ -165,11 +188,12 @@ private fun HomePage() {
 }
 
 @Composable
-private fun SettingsPage() {
+private fun SettingsPage(onPreview: () -> Unit) {
     val context = LocalContext.current
 
     LazyColumn(
         Modifier.fillMaxSize()
+            .statusBarsPadding()
             .padding(horizontal = 24.dp)
     ) {
         item {
@@ -198,6 +222,9 @@ private fun SettingsPage() {
         item {
             SectionCard {
                 SmallTitle("支持")
+                SettingsRow("二级菜单预览", "打开 Liquid Glass 二级菜单", KiraIcon.SPARKLE) {
+                    onPreview()
+                }
                 SettingsRow("赞助开发", "支持持续维护和版本适配", KiraIcon.HEART) {
                     Toast.makeText(context, "感谢支持，赞助入口待接入", Toast.LENGTH_SHORT).show()
                 }
@@ -205,7 +232,7 @@ private fun SettingsPage() {
                     Toast.makeText(context, "交流群入口待接入", Toast.LENGTH_SHORT).show()
                 }
                 SettingsRow("仓库地址", "打开 GitHub 仓库", KiraIcon.LINK) {
-                    openUrl(context, "https://github.com/XiaoWen91/XiaoWenmiuix")
+                    openUrl(context, "https://github.com/XiaoWen91/XiaoWenmiux")
                 }
             }
         }
