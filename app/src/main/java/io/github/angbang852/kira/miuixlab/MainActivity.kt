@@ -94,9 +94,6 @@ private fun KiraToolsApp() {
     var dialogMessage by remember { mutableStateOf("") }
     val tabs = listOf(
         AppTab("首页", Icons.Filled.Home),
-        AppTab("增强", Icons.Filled.AutoAwesome),
-        AppTab("美化", Icons.Filled.Palette),
-        AppTab("过滤", Icons.Filled.FilterAlt),
         AppTab("设置", Icons.Filled.Settings),
     )
     val light = !isSystemInDarkTheme()
@@ -110,15 +107,10 @@ private fun KiraToolsApp() {
                 .background(pageBackground)
                 .layerBackdrop(backdrop)
         ) {
-            when (page) {
-                0 -> HomePage()
-                1 -> EnhancedPage()
-                2 -> BeautifyPage { title, message ->
-                    dialogTitle = title
-                    dialogMessage = message
-                }
-                3 -> FilterPage()
-                else -> SettingsPage { title, message ->
+            if (page == 0) {
+                HomePage()
+            } else {
+                SettingsPage { title, message ->
                     dialogTitle = title
                     dialogMessage = message
                 }
