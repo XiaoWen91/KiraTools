@@ -1294,21 +1294,21 @@ object MainMenuDialog {
         //   「显示开、实际关」误导用户。现与 anyFilterOn() 口径统一为 false。
         //   ★ 只改默认值：已显式保存过的键仍按存值显示（Prefs.bool 读到值即忽略 def）。
         //   ★ 疑似AI(flt_ai_suspect) 行保持 true 不动 —— 见报告「待确认」。
-        val rows = arrayOf(
-            arrayOf("过滤广告内容", Prefs.K_FLT_ADS, false, false),
-            arrayOf("过滤广告视频", Prefs.K_FLT_ADVIDEO, false, false),
-            arrayOf("过滤图文内容", Prefs.K_FLT_IMAGE, false, false),
-            arrayOf("过滤直播内容", Prefs.K_FLT_LIVE, false, false),
-            arrayOf("过滤AI生成内容", Prefs.K_FLT_AI, false, false),
-            arrayOf("过滤疑似AI内容", Prefs.K_FLT_AI_SUSPECT, false, false),
-            arrayOf("过滤电商内容", Prefs.K_FLT_EC, false, false),
-            arrayOf("过滤影视内容", Prefs.K_FLT_DRAMA, false, false),
-            arrayOf("按点赞数过滤", Prefs.K_FLT_LIKE_ON, false, true),
-            arrayOf("按字段过滤", Prefs.K_FLT_KW_ON, false, true),
+        val rows = arrayOf<Array<Any>>(
+            arrayOf<Any>("过滤广告内容", Prefs.K_FLT_ADS, false, false),
+            arrayOf<Any>("过滤广告视频", Prefs.K_FLT_ADVIDEO, false, false),
+            arrayOf<Any>("过滤图文内容", Prefs.K_FLT_IMAGE, false, false),
+            arrayOf<Any>("过滤直播内容", Prefs.K_FLT_LIVE, false, false),
+            arrayOf<Any>("过滤AI生成内容", Prefs.K_FLT_AI, false, false),
+            arrayOf<Any>("过滤疑似AI内容", Prefs.K_FLT_AI_SUSPECT, false, false),
+            arrayOf<Any>("过滤电商内容", Prefs.K_FLT_EC, false, false),
+            arrayOf<Any>("过滤影视内容", Prefs.K_FLT_DRAMA, false, false),
+            arrayOf<Any>("按点赞数过滤", Prefs.K_FLT_LIKE_ON, false, true),
+            arrayOf<Any>("按字段过滤", Prefs.K_FLT_KW_ON, false, true),
             
             // ★ 默认 true→false（2026-09-30 用户定稿：全关，按需开启）
-            arrayOf("首次进主页刷新", Prefs.K_FLT_BOOTFLUSH, false, false),
-            arrayOf("首页内容池接精选页", Prefs.K_FLT_HOMEREFILL, false, false,
+            arrayOf<Any>("首次进主页刷新", Prefs.K_FLT_BOOTFLUSH, false, false),
+            arrayOf<Any>("首页内容池接精选页", Prefs.K_FLT_HOMEREFILL, false, false,
                 "说明：开启后池子见底时会自动去首页拉货 —— 有时会精选页跳到首页再跳回。"),
         )
         val container = LinearLayout(ctx).apply {

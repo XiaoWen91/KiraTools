@@ -34,7 +34,7 @@ object ConfirmActionHooks {
                             chain.proceed()
                         } else {
                             showing = true
-                            val onOk = {
+                            val onOk: () -> Unit = {
                                 bypass.set(true)
                                 try {
                                     v.performClick()
