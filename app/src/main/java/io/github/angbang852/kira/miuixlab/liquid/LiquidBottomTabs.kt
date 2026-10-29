@@ -24,7 +24,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
@@ -72,6 +75,8 @@ fun LiquidBottomTabs(
     val containerColor =
         if (isLightTheme) Color(0xFFFAFAFA).copy(0.4f)
         else Color(0xFF121212).copy(0.4f)
+
+    val tabsBackdrop = rememberLayerBackdrop()
 
     BoxWithConstraints(
         modifier,
@@ -156,6 +161,26 @@ fun LiquidBottomTabs(
             )
         }
 
+        Box(
+            Modifier
+                .matchParentSize()
+                .alpha(0f)
+                .layerBackdrop(tabsBackdrop)
+                .drawBehind {
+                    val left = if (isLtr) {
+                        dampedDragAnimation.value * tabWidth
+                    } else {
+                        size.width - (dampedDragAnimation.value + 1f) * tabWidth
+                    }
+                    drawRoundRect(
+                        color = accentColor.copy(alpha = 0.45f),
+                        topLeft = Offset(left + 4f.dp.toPx(), 4f.dp.toPx()),
+                        size = Size(tabWidth - 8f.dp.toPx(), size.height - 8f.dp.toPx()),
+                        cornerRadius = CornerRadius(size.height / 2f)
+                    )
+                }
+        )
+
         Row(
             Modifier
                 .graphicsLayer {
@@ -197,7 +222,7 @@ fun LiquidBottomTabs(
                 .then(interactiveHighlight.gestureModifier)
                 .then(dampedDragAnimation.modifier)
                 .drawBackdrop(
-                    backdrop = backdrop,
+                    backdrop = rememberCombinedBackdrop(backdrop, tabsBackdrop),
                     shape = { Capsule() },
                     effects = {
                         val progress = dampedDragAnimation.pressProgress

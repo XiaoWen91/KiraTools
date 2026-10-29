@@ -51,8 +51,7 @@ fun LiquidDialogContent(
     val light = !isSystemInDarkTheme()
     val contentColor = if (light) Color.Black else Color.White
     val accentColor = if (light) Color(0xFF0088FF) else Color(0xFF0091FF)
-    val containerColor = if (light) Color.White else Color(0xFF1C1C1E)
-    val dimColor = if (light) Color(0xFF29293A).copy(0.23f) else Color(0xFF121212).copy(0.56f)
+    val containerColor = if (light) Color.White.copy(alpha = 0.35f) else Color.Black.copy(alpha = 0.35f)
 
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
@@ -66,12 +65,6 @@ fun LiquidDialogContent(
             Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
-            Box(
-                Modifier.fillMaxSize()
-                    .background(dimColor)
-                    .clickable(onClick = onDismiss)
-            )
-
             Column(
                 Modifier
                     .padding(40.dp)
@@ -83,7 +76,7 @@ fun LiquidDialogContent(
                             lens(24.dp.toPx(), 48.dp.toPx(), depthEffect = true)
                         },
                         highlight = { Highlight.Plain },
-                        onDrawSurface = { drawRect(containerColor.copy(alpha = 0.94f)) },
+                        onDrawSurface = { drawRect(containerColor) },
                     )
                     .fillMaxWidth(),
             ) {
@@ -108,7 +101,7 @@ fun LiquidDialogContent(
                     Row(
                         Modifier
                             .clip(Capsule())
-                            .background(containerColor.copy(0.12f))
+                            .background(containerColor.copy(0.35f))
                             .clickable(onClick = onDismiss)
                             .height(48.dp)
                             .weight(1f)
@@ -116,10 +109,7 @@ fun LiquidDialogContent(
                         horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        BasicText(
-                            "取消",
-                            style = TextStyle(contentColor, 16.sp),
-                        )
+                        BasicText("取消", style = TextStyle(contentColor, 16.sp))
                     }
                     Row(
                         Modifier
@@ -132,10 +122,7 @@ fun LiquidDialogContent(
                         horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        BasicText(
-                            "确定",
-                            style = TextStyle(Color.White, 16.sp),
-                        )
+                        BasicText("确定", style = TextStyle(Color.White, 16.sp))
                     }
                 }
             }
