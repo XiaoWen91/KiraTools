@@ -63,5 +63,8 @@
         <meta-data
             android:name="xposeddescription"
             android:value="@string/module_desc" />
+        <meta-data
+            android:name="xposedscope"
+            android:resource="@xml/xposed_scope" />
     </application>
 </manifest>

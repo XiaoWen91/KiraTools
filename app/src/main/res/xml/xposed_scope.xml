@@ -2,6 +2,5 @@
 <resources>
     <string-array name="xposed_scope">
         <item>com.smile.gifmaker</item>
-        <item>com.kuaishou.nebula</item>
     </string-array>
 </resources>
