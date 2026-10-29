@@ -29,6 +29,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -176,11 +177,12 @@ fun LiquidBottomTabs(
                     } else {
                         size.width - (dampedDragAnimation.value + 1f) * tabWidth
                     }
-                    drawRoundRect(
-                        color = accentColor.copy(alpha = 0.55f),
-                        topLeft = Offset(left + 4f.dp.toPx(), 4f.dp.toPx()),
-                        size = Size(tabWidth - 8f.dp.toPx(), size.height - 8f.dp.toPx()),
-                        cornerRadius = CornerRadius(size.height / 2f)
+                    drawLine(
+                        color = accentColor.copy(alpha = 0.35f),
+                        start = Offset(left + tabWidth * 0.35f, size.height - 5f.dp.toPx()),
+                        end = Offset(left + tabWidth * 0.65f, size.height - 5f.dp.toPx()),
+                        strokeWidth = 2f.dp.toPx(),
+                        cap = StrokeCap.Round
                     )
                 }
         )
