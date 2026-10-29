@@ -1,3 +1,7 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
@@ -16,7 +20,7 @@ android {
         buildConfigField(
             "String",
             "BUILD_TIME",
-            "\"${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US).format(java.util.Date())}\""
+            "\"${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date())}\""
         )
     }
 

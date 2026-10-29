@@ -13,11 +13,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -37,10 +39,10 @@ import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.darkColorScheme
@@ -105,6 +107,24 @@ private fun KiraToolsApp() {
 }
 
 @Composable
+private fun SectionCard(content: @Composable () -> Unit) {
+    val dark = isSystemInDarkTheme()
+    val background = if (dark) {
+        Color(0xFF1C1C1E).copy(alpha = 0.72f)
+    } else {
+        Color.White.copy(alpha = 0.82f)
+    }
+    Column(
+        Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .background(background)
+            .padding(vertical = 6.dp)
+    ) {
+        content()
+    }
+}
+
+@Composable
 private fun HomePage() {
     Column(
         Modifier.fillMaxSize()
@@ -123,18 +143,24 @@ private fun HomePage() {
         )
         Spacer(Modifier.height(20.dp))
 
-        SmallTitle("构建信息")
-        InfoRow("构建时间", BuildConfig.BUILD_TIME, KiraIcon.CLOCK)
-        InfoRow("包名", "com.KiraTools.MiuixLab", KiraIcon.PACKAGE)
-        InfoRow("界面", "Liquid Glass + Miuix", KiraIcon.SPARKLE)
+        SectionCard {
+            SmallTitle("构建信息")
+            InfoRow("构建时间", BuildConfig.BUILD_TIME, KiraIcon.CLOCK)
+            InfoRow("包名", "com.KiraTools.MiuixLab", KiraIcon.PACKAGE)
+            InfoRow("界面", "Liquid Glass + Miuix", KiraIcon.SPARKLE)
+        }
 
-        Spacer(Modifier.height(20.dp))
-        SmallTitle("说明")
-        Text(
-            "这是独立实验工程，用于验证 Miuix 与 Liquid Glass 底栏、二级菜单样式。",
-            fontSize = 14.sp,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-        )
+        Spacer(Modifier.height(16.dp))
+
+        SectionCard {
+            SmallTitle("说明")
+            Text(
+                "这是独立实验工程，用于验证 Miuix 与 Liquid Glass 底栏、二级菜单样式。",
+                fontSize = 14.sp,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+            )
+        }
     }
 }
 
@@ -155,32 +181,32 @@ private fun SettingsPage() {
             )
         }
 
-        item { SmallTitle("配置") }
         item {
-            SettingsRow("导出配置", "保存当前设置到文件", KiraIcon.DOWNLOAD) {
-                Toast.makeText(context, "导出配置：待接入文件保存", Toast.LENGTH_SHORT).show()
-            }
-        }
-        item {
-            SettingsRow("导入配置", "从文件恢复设置", KiraIcon.UPLOAD) {
-                Toast.makeText(context, "导入配置：待接入文件选择", Toast.LENGTH_SHORT).show()
+            SectionCard {
+                SmallTitle("配置")
+                SettingsRow("导出配置", "保存当前设置到文件", KiraIcon.DOWNLOAD) {
+                    Toast.makeText(context, "导出配置：待接入文件保存", Toast.LENGTH_SHORT).show()
+                }
+                SettingsRow("导入配置", "从文件恢复设置", KiraIcon.UPLOAD) {
+                    Toast.makeText(context, "导入配置：待接入文件选择", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
-        item { SmallTitle("支持") }
+        item { Spacer(Modifier.height(12.dp)) }
+
         item {
-            SettingsRow("赞助开发", "支持持续维护和版本适配", KiraIcon.HEART) {
-                Toast.makeText(context, "感谢支持，赞助入口待接入", Toast.LENGTH_SHORT).show()
-            }
-        }
-        item {
-            SettingsRow("交流群", "加入 QQ 群获取更新与支持", KiraIcon.CHAT) {
-                Toast.makeText(context, "交流群入口待接入", Toast.LENGTH_SHORT).show()
-            }
-        }
-        item {
-            SettingsRow("仓库地址", "打开 GitHub 仓库", KiraIcon.LINK) {
-                openUrl(context, "https://github.com/XiaoWen91/XiaoWenmiux")
+            SectionCard {
+                SmallTitle("支持")
+                SettingsRow("赞助开发", "支持持续维护和版本适配", KiraIcon.HEART) {
+                    Toast.makeText(context, "感谢支持，赞助入口待接入", Toast.LENGTH_SHORT).show()
+                }
+                SettingsRow("交流群", "加入 QQ 群获取更新与支持", KiraIcon.CHAT) {
+                    Toast.makeText(context, "交流群入口待接入", Toast.LENGTH_SHORT).show()
+                }
+                SettingsRow("仓库地址", "打开 GitHub 仓库", KiraIcon.LINK) {
+                    openUrl(context, "https://github.com/XiaoWen91/XiaoWenmiuix")
+                }
             }
         }
 
@@ -224,7 +250,7 @@ private fun IconBadge(icon: KiraIcon) {
     Box(
         Modifier.size(36.dp)
             .clip(CircleShape)
-            .background(Color(0xFF0A84FF).copy(0.16f)),
+            .background(Color(0xFF0A84FF).copy(alpha = 0.16f)),
         contentAlignment = Alignment.Center,
     ) {
         CanvasIcon(
