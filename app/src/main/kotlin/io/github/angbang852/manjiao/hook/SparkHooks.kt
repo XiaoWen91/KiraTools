@@ -468,6 +468,18 @@ object SparkHooks {
         } catch (t: Throwable) {
             Logger.d("spark settings entry miss: ${t.message}")
         }
+        try {
+            val c = Class.forName("com.yxcorp.gifshow.settings.page.SettingItemListFragment", false, cl)
+            val m = c.getDeclaredMethod("doBindView", android.view.View::class.java)
+            install(module, m, "spark.settings.list") { chain ->
+                val r = chain.proceed()
+                val view = chain.getArg(0) as? android.view.View
+                if (view != null) SparkSettingsEntry.inject(view)
+                r
+            }
+        } catch (t: Throwable) {
+            Logger.d("spark settings list entry miss: ${t.message}")
+        }
     }
 
     private fun hookAutoSpark(module: XposedModule, cl: ClassLoader) {

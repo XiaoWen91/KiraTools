@@ -122,48 +122,70 @@ private data class ToggleItem(
     val default: Boolean,
 )
 
+private data class MenuGroup(
+    val title: String,
+    val summary: String,
+    val items: List<ToggleItem>,
+)
+
 private data class MenuCategory(
     val title: String,
     val summary: String,
     val icon: ImageVector,
-    val items: List<ToggleItem>,
+    val items: List<ToggleItem> = emptyList(),
+    val groups: List<MenuGroup> = emptyList(),
 )
 
 private val menuCategories = listOf(
     MenuCategory(
-        "续火花", "续火花与消息增强", Icons.Filled.AutoAwesome,
-        listOf(
+        "续火花", "自动续火花与固定消息", Icons.Filled.AutoAwesome,
+        items = listOf(
             ToggleItem("启用续火花", "每天自动发送", Prefs.K_SPARK_ENABLED, false),
             ToggleItem("静默发送", "不显示发送状态", Prefs.K_SPARK_SILENT, false),
+        )
+    ),
+    MenuCategory(
+        "美化", "底栏、右侧、文案与播放 UI", Icons.Filled.Palette,
+        groups = listOf(
+            MenuGroup(
+                "底栏", "隐藏与透明度",
+                listOf(
+                    ToggleItem("隐藏底栏", "移除底栏 Tab", Prefs.K_BEAUTY_BOTTOM_HIDE, false),
+                    ToggleItem("底栏透明", "降低底栏不透明度", Prefs.K_BEAUTY_BOTTOM_TRANSPARENT, false),
+                )
+            ),
+            MenuGroup(
+                "视频页右侧", "右侧组件、全屏与金币",
+                listOf(
+                    ToggleItem("隐藏右侧组件", "隐藏右侧操作栏", Prefs.K_BEAUTY_RIGHT_HIDE, false),
+                    ToggleItem("去除全屏按钮", "隐藏全屏按钮", Prefs.K_BEAUTY_NO_FULLSCREEN, false),
+                    ToggleItem("去除金币红包", "移除金币浮窗", Prefs.K_BEAUTY_NO_COIN, false),
+                )
+            ),
+            MenuGroup(
+                "文案信息", "时间与 IP",
+                listOf(
+                    ToggleItem("强制显示时间", "所有视频显示时间", Prefs.K_BEAUTY_FORCE_TIME, false),
+                    ToggleItem("强制显示 IP", "所有视频显示 IP", Prefs.K_BEAUTY_FORCE_IP, false),
+                )
+            ),
+        )
+    ),
+    MenuCategory(
+        "增强功能", "消息、视频与实验能力", Icons.Filled.Bolt,
+        items = listOf(
             ToggleItem("消息防撤回", "保留撤回前内容", Prefs.K_SPARK_ANTI_RECALL, true),
             ToggleItem("免已读", "打开会话不标记已读", Prefs.K_SPARK_NO_READ, false),
-        )
-    ),
-    MenuCategory(
-        "视频增强", "去水印、时间与计数", Icons.Filled.Movie,
-        listOf(
+            ToggleItem("真实计数", "显示真实消息计数", Prefs.K_SPARK_REAL_COUNT, false),
+            ToggleItem("精确时间", "显示到秒", Prefs.K_SPARK_EXACT_TIME, false),
+            ToggleItem("隐身访问", "阻止访问轨迹上报", Prefs.K_SPARK_STEALTH_VISITOR, false),
             ToggleItem("去水印", "保存与下载去水印", Prefs.K_SPARK_NO_WATERMARK, true),
             ToggleItem("去开屏广告", "跳过启动广告", Prefs.K_SPARK_NO_SPLASH, true),
-            ToggleItem("精确时间", "显示到秒", Prefs.K_SPARK_EXACT_TIME, false),
-            ToggleItem("真实计数", "显示真实消息计数", Prefs.K_SPARK_REAL_COUNT, false),
-            ToggleItem("隐身访问", "阻止访问轨迹上报", Prefs.K_SPARK_STEALTH_VISITOR, false),
         )
     ),
     MenuCategory(
-        "美化", "底栏、右侧与文案", Icons.Filled.Palette,
-        listOf(
-            ToggleItem("隐藏底栏", "移除底栏 Tab", Prefs.K_BEAUTY_BOTTOM_HIDE, false),
-            ToggleItem("底栏透明", "降低底栏不透明度", Prefs.K_BEAUTY_BOTTOM_TRANSPARENT, false),
-            ToggleItem("隐藏右侧组件", "隐藏右侧操作栏", Prefs.K_BEAUTY_RIGHT_HIDE, false),
-            ToggleItem("去除全屏按钮", "隐藏全屏按钮", Prefs.K_BEAUTY_NO_FULLSCREEN, false),
-            ToggleItem("去除金币红包", "移除金币浮窗", Prefs.K_BEAUTY_NO_COIN, false),
-            ToggleItem("强制显示时间", "所有视频显示时间", Prefs.K_BEAUTY_FORCE_TIME, false),
-            ToggleItem("强制显示 IP", "所有视频显示 IP", Prefs.K_BEAUTY_FORCE_IP, false),
-        )
-    ),
-    MenuCategory(
-        "内容过滤", "广告、类型与净化", Icons.Filled.FilterAlt,
-        listOf(
+        "过滤", "广告、类型与净化", Icons.Filled.FilterAlt,
+        items = listOf(
             ToggleItem("过滤广告", "移除广告内容", Prefs.K_FLT_ADS, false),
             ToggleItem("过滤广告视频", "移除广告视频", Prefs.K_FLT_ADVIDEO, false),
             ToggleItem("过滤短剧", "移除短剧", Prefs.K_FLT_DRAMA, false),
@@ -175,7 +197,7 @@ private val menuCategories = listOf(
     ),
     MenuCategory(
         "操作确认", "点赞、收藏、关注确认", Icons.Filled.TouchApp,
-        listOf(
+        items = listOf(
             ToggleItem("点赞确认", "点赞前确认", Prefs.K_CONFIRM_LIKE, false),
             ToggleItem("收藏确认", "收藏前确认", Prefs.K_CONFIRM_COLLECT, false),
             ToggleItem("关注确认", "关注前确认", Prefs.K_CONFIRM_FOLLOW, false),
@@ -183,7 +205,7 @@ private val menuCategories = listOf(
     ),
     MenuCategory(
         "性能与调试", "日志、主进程与诊断", Icons.Filled.Speed,
-        listOf(
+        items = listOf(
             ToggleItem("静默日志", "关闭刷屏日志", Prefs.K_PERF_QUIET, false),
             ToggleItem("仅主进程注入", "减少子进程 Hook", Prefs.K_PERF_MAINPROC, false),
             ToggleItem("诊断日志", "打开 diag 日志", Prefs.K_DIAG, false),
@@ -204,6 +226,7 @@ private fun InjectedTheme(content: @Composable () -> Unit) {
 @Composable
 private fun InjectedScreen(act: Activity, dialog: Dialog) {
     var category by remember { mutableStateOf<Int?>(null) }
+    var group by remember { mutableStateOf<Int?>(null) }
 
     LazyColumn(
         Modifier.fillMaxWidth()
@@ -237,7 +260,10 @@ private fun InjectedScreen(act: Activity, dialog: Dialog) {
                                     modifier = Modifier.size(16.dp),
                                 )
                             },
-                            onClick = { category = index },
+                            onClick = {
+                                category = index
+                                group = null
+                            },
                         )
                     }
                 }
@@ -260,56 +286,101 @@ private fun InjectedScreen(act: Activity, dialog: Dialog) {
             }
         } else {
             val cat = menuCategories[category!!]
+            val currentGroup = group?.let { cat.groups.getOrNull(it) }
             item {
                 BasicComponent(
                     title = "返回",
-                    summary = cat.title,
+                    summary = currentGroup?.title ?: cat.title,
                     startAction = { IconBadge(Icons.Filled.ArrowBack) },
-                    onClick = { category = null },
+                    onClick = {
+                        if (group != null) group = null else category = null
+                    },
                 )
             }
             item { Spacer(Modifier.height(10.dp)) }
-            item {
-                SectionCard {
-                    SmallTitle(cat.title)
-                    cat.items.forEach { item ->
-                        SwitchRow(item.title, item.summary, item.key, item.default)
+
+            if (cat.groups.isNotEmpty() && group == null) {
+                item {
+                    Column {
+                        cat.groups.forEachIndexed { index, g ->
+                            BasicComponent(
+                                title = g.title,
+                                summary = g.summary,
+                                startAction = { IconBadge(Icons.Filled.Folder) },
+                                endActions = {
+                                    Icon(
+                                        MiuixIcons.Basic.ArrowRight,
+                                        contentDescription = "进入",
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                },
+                                onClick = { group = index },
+                            )
+                        }
+                    }
+                }
+                if (cat.title == "美化") {
+                    item {
+                        BasicComponent(
+                            title = "区域透明度",
+                            summary = "打开滑杆设置",
+                            startAction = { IconBadge(Icons.Filled.Opacity) },
+                            endActions = {
+                                Icon(MiuixIcons.Basic.ArrowRight, contentDescription = "进入", modifier = Modifier.size(16.dp))
+                            },
+                            onClick = {
+                                dialog.dismiss()
+                                InjectedAlphaPanel.show(act)
+                            },
+                        )
+                    }
+                    item {
+                        BasicComponent(
+                            title = "隐藏 Tab / 视频控件",
+                            summary = "扫描并隐藏控件",
+                            startAction = { IconBadge(Icons.Filled.VisibilityOff) },
+                            endActions = {
+                                Icon(MiuixIcons.Basic.ArrowRight, contentDescription = "进入", modifier = Modifier.size(16.dp))
+                            },
+                            onClick = {
+                                dialog.dismiss()
+                                InjectedScanPanel.show(act)
+                            },
+                        )
+                    }
+                }
+            } else {
+                val items = currentGroup?.items ?: cat.items
+                if (items.isNotEmpty()) {
+                    item {
+                        SectionCard {
+                            SmallTitle(currentGroup?.title ?: cat.title)
+                            items.forEach { item ->
+                                SwitchRow(item.title, item.summary, item.key, item.default)
+                            }
+                        }
+                    }
+                }
+                if (cat.title == "续火花") {
+                    item { SparkExtra() }
+                }
+                if (cat.title == "增强功能") {
+                    item {
+                        BasicComponent(
+                            title = "清除全部未读（实验）",
+                            summary = "清除红点并尝试上报服务器",
+                            startAction = { IconBadge(Icons.Filled.MarkEmailRead) },
+                            endActions = {
+                                Icon(MiuixIcons.Basic.ArrowRight, contentDescription = "执行", modifier = Modifier.size(16.dp))
+                            },
+                            onClick = {
+                                Toast.makeText(act, "清除全部未读：服务端接口待接入", Toast.LENGTH_LONG).show()
+                            },
+                        )
                     }
                 }
             }
-            if (cat.title == "续火花") {
-                item { SparkExtra() }
-            }
-            if (cat.title == "美化") {
-                item {
-                    BasicComponent(
-                        title = "区域透明度",
-                        summary = "打开滑杆设置",
-                        startAction = { IconBadge(Icons.Filled.Opacity) },
-                        endActions = {
-                            Icon(MiuixIcons.Basic.ArrowRight, contentDescription = "进入", modifier = Modifier.size(16.dp))
-                        },
-                        onClick = {
-                            dialog.dismiss()
-                            InjectedAlphaPanel.show(act)
-                        },
-                    )
-                }
-                item {
-                    BasicComponent(
-                        title = "隐藏 Tab / 视频控件",
-                        summary = "扫描并隐藏控件",
-                        startAction = { IconBadge(Icons.Filled.VisibilityOff) },
-                        endActions = {
-                            Icon(MiuixIcons.Basic.ArrowRight, contentDescription = "进入", modifier = Modifier.size(16.dp))
-                        },
-                        onClick = {
-                            dialog.dismiss()
-                            InjectedScanPanel.show(act)
-                        },
-                    )
-                }
-            }
+
             item { Spacer(Modifier.height(10.dp)) }
             item {
                 BasicComponent(
