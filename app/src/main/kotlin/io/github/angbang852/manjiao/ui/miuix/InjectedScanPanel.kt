@@ -2,7 +2,6 @@ package io.github.angbang852.manjiao.ui.miuix
 
 import android.app.Activity
 import android.app.Dialog
-import android.content.Context
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.ColorDrawable
 import android.os.Handler
@@ -10,11 +9,9 @@ import android.os.Looper
 import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -45,9 +42,17 @@ import top.yukonga.miuix.kmp.theme.lightColorScheme
 object InjectedScanPanel {
     private var current: Dialog? = null
 
-    fun show(act: Activity): Boolean {
+    fun show(act: Activity, initialCategory: String? = null): Boolean {
+        return showDialog(act) { a, d -> ScanScreen(a, d, initialCategory) }
+    }
+
+    fun showScanResults(act: Activity): Boolean {
+        return showDialog(act) { a, d -> ScanResultsScreen(a, d) }
+    }
+
+    private fun showDialog(act: Activity, content: @Composable (Activity, Dialog) -> Unit): Boolean {
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            Handler(Looper.getMainLooper()).post { show(act) }
+            Handler(Looper.getMainLooper()).post { showDialog(act, content) }
             return true
         }
         if (current?.isShowing == true) return true
@@ -79,9 +84,7 @@ object InjectedScanPanel {
                 if (current === dialog) current = null
             }
             view.setContent {
-                ScanTheme {
-                    ScanScreen(act, dialog)
-                }
+                ScanTheme { content(act, dialog) }
             }
             current = dialog
             dialog.show()
@@ -104,68 +107,143 @@ private fun ScanTheme(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun ScanScreen(act: Activity, dialog: Dialog) {
+private fun ScanScreen(act: Activity, dialog: Dialog, initialCategory: String?) {
     val ctx = LocalContext.current
     val dark = isSystemInDarkTheme()
-    Column(
+    var hidden by remember { mutableStateOf(Prefs.str(Prefs.K_BEAUTY_HIDDEN_ELEMS, "")) }
+    val hiddenSet = hidden.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+
+    fun toggle(token: String, on: Boolean) {
+        val next = hiddenSet.toMutableSet()
+        if (on) next.add(token) else next.remove(token)
+        hidden = next.joinToString(",")
+        Prefs.setStrSync(ctx, Prefs.K_BEAUTY_HIDDEN_ELEMS, hidden)
+        ScanHideHooks.apply(act.window?.decorView)
+        act.window?.decorView?.postDelayed({ ScanHideHooks.apply(act.window?.decorView) }, 120L)
+    }
+
+    LazyColumn(
         Modifier.fillMaxWidth()
-            .padding(20.dp)
             .clip(RoundedCornerShape(22.dp))
             .background(if (dark) Color(0xFF1C1C1E) else Color.White)
             .padding(20.dp)
     ) {
-        Text("隐藏 Tab / 视频控件", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Text(
-            "扫描当前页面并选择要隐藏的控件",
-            fontSize = 12.sp,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
-        )
-
-        BasicComponent(
-            title = "扫描当前页面",
-            summary = "打开扫描结果面板",
-            onClick = {
-                dialog.dismiss()
-                ScanHideHooks.showScanResultPanel(act)
-            },
-        )
-        BasicComponent(
-            title = "恢复全部隐藏",
-            summary = "清除已保存的隐藏 token",
-            onClick = {
-                Prefs.setStrSync(ctx, Prefs.K_BEAUTY_HIDDEN_ELEMS, "")
-                ScanHideHooks.apply(act.window?.decorView)
-                dialog.dismiss()
-            },
-        )
-
-        var hidden by remember { mutableStateOf(Prefs.str(Prefs.K_BEAUTY_HIDDEN_ELEMS, "")) }
-        val hiddenSet = hidden.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
-        fun toggle(token: String, on: Boolean) {
-            val next = hiddenSet.toMutableSet()
-            if (on) next.add(token) else next.remove(token)
-            hidden = next.joinToString(",")
-            Prefs.setStrSync(ctx, Prefs.K_BEAUTY_HIDDEN_ELEMS, hidden)
-            ScanHideHooks.apply(act.window?.decorView)
+        item {
+            Text("隐藏 Tab / 视频控件", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(
+                "选择要隐藏的控件，修改后立即应用",
+                fontSize = 12.sp,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
+            )
+        }
+        item {
+            BasicComponent(
+                title = "扫描当前页面",
+                summary = "打开扫描结果面板",
+                onClick = {
+                    dialog.dismiss()
+                    ScanHideHooks.showScanResultPanel(act)
+                },
+            )
+        }
+        item {
+            BasicComponent(
+                title = "恢复全部隐藏",
+                summary = "清除已保存的隐藏 token",
+                onClick = {
+                    Prefs.setStrSync(ctx, Prefs.K_BEAUTY_HIDDEN_ELEMS, "")
+                    hidden = ""
+                    ScanHideHooks.apply(act.window?.decorView)
+                },
+            )
         }
 
-        SmallTitle("顶栏")
-        listOf("分类", "侧边栏", "游戏").forEach { label ->
-            val token = "text:$label"
-            SwitchPreference(title = label, checked = token in hiddenSet, onCheckedChange = { toggle(token, it) })
-        }
-        SmallTitle("底栏")
-        listOf("首页", "发现", "消息", "我").forEach { label ->
-            val token = "text:$label"
-            SwitchPreference(title = label, checked = token in hiddenSet, onCheckedChange = { toggle(token, it) })
+        val cats = if (initialCategory != null) listOf(initialCategory) else listOf("顶栏", "底栏", "视频控件", "分享面板")
+        cats.forEach { cat ->
+            item { SmallTitle(cat) }
+            presetsFor(cat).forEach { label ->
+                val token = "text:$label"
+                item {
+                    SwitchPreference(
+                        title = label,
+                        checked = token in hiddenSet,
+                        onCheckedChange = { toggle(token, it) },
+                    )
+                }
+            }
         }
 
-        Spacer(Modifier.height(12.dp))
-        TextButton(
-            text = "关闭",
-            onClick = { dialog.dismiss() },
-            modifier = Modifier.fillMaxWidth(),
-        )
+        item {
+            TextButton(
+                text = "关闭",
+                onClick = { dialog.dismiss() },
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+            )
+        }
     }
+}
+
+@Composable
+private fun ScanResultsScreen(act: Activity, dialog: Dialog) {
+    val ctx = LocalContext.current
+    val dark = isSystemInDarkTheme()
+    var hidden by remember { mutableStateOf(Prefs.str(Prefs.K_BEAUTY_HIDDEN_ELEMS, "")) }
+    val hiddenSet = hidden.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+    val items = remember { ScanHideHooks.scanCurrent(act) }
+
+    fun toggle(token: String, on: Boolean) {
+        val next = hiddenSet.toMutableSet()
+        if (on) next.add(token) else next.remove(token)
+        hidden = next.joinToString(",")
+        Prefs.setStrSync(ctx, Prefs.K_BEAUTY_HIDDEN_ELEMS, hidden)
+        ScanHideHooks.apply(act.window?.decorView)
+        act.window?.decorView?.postDelayed({ ScanHideHooks.apply(act.window?.decorView) }, 120L)
+    }
+
+    LazyColumn(
+        Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .background(if (dark) Color(0xFF1C1C1E) else Color.White)
+            .padding(20.dp)
+    ) {
+        item {
+            Text("扫描结果", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(
+                "当前页面可隐藏元素 ${items.size} 个",
+                fontSize = 12.sp,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
+            )
+        }
+        if (items.isEmpty()) {
+            item { Text("没扫到可隐藏元素", fontSize = 13.sp, color = MiuixTheme.colorScheme.onSurfaceVariantSummary) }
+        } else {
+            items.forEach { e ->
+                item {
+                    SwitchPreference(
+                        title = e.label,
+                        summary = "${e.token} · ${e.w}x${e.h}",
+                        checked = hiddenSet.contains(e.token),
+                        onCheckedChange = { toggle(e.token, it) },
+                    )
+                }
+            }
+        }
+        item {
+            TextButton(
+                text = "关闭",
+                onClick = { dialog.dismiss() },
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+            )
+        }
+    }
+}
+
+private fun presetsFor(cat: String): List<String> = when (cat) {
+    "顶栏" -> listOf("分类", "侧边栏", "王者送福利", "游戏", "玩游戏")
+    "底栏" -> listOf("首页", "发现", "拍摄", "消息", "我", "同城", "精选")
+    "视频控件" -> listOf("头像", "点赞", "评论", "收藏", "分享", "音乐")
+    "分享面板" -> listOf("保存到相册", "下载", "分享到微信", "朋友圈", "QQ", "微博", "复制链接", "举报", "不感兴趣")
+    else -> emptyList()
 }

@@ -39,8 +39,12 @@ object ScanHideHooks {
                         val a = chain.thisObject as? Activity
                         if (a != null) {
                             ActivityBridge.install(a)
-                            apply(a.window?.decorView)
-                            a.window?.decorView?.postDelayed({ apply(a.window?.decorView) }, 600L)
+                            val root = a.window?.decorView
+                            apply(root)
+                            root?.postDelayed({ apply(root) }, 150L)
+                            root?.postDelayed({ apply(root) }, 600L)
+                            root?.postDelayed({ apply(root) }, 1200L)
+                            root?.postDelayed({ apply(root) }, 2500L)
                         }
                     } catch (_: Throwable) {}
                     r
@@ -56,7 +60,21 @@ object ScanHideHooks {
     }
 
     private fun isHiddenToken(v: View, token: String, hidden: Set<String>): Boolean {
-        return hidden.contains(token)
+        if (hidden.contains(token)) return true
+        if (v is TextView) {
+            val t = v.text?.toString()?.trim().orEmpty()
+            if (t.isNotEmpty() && hidden.contains("text:$t")) return true
+        }
+        val d = v.contentDescription?.toString()?.trim().orEmpty()
+        if (d.isNotEmpty() && hidden.contains("desc:$d")) return true
+        val id = v.id
+        if (id != 0 && id != View.NO_ID) {
+            try {
+                val n = v.resources.getResourceEntryName(id)
+                if (n.isNotBlank() && hidden.contains("id:$n")) return true
+            } catch (_: Throwable) {}
+        }
+        return false
     }
 
     fun apply(root: View?) {
@@ -69,6 +87,9 @@ object ScanHideHooks {
             Logger.d("kira scan apply miss: ${t.message}")
         }
     }
+
+    fun scanCurrent(act: Activity): List<Elem> =
+        act.window?.decorView?.let { scan(it) } ?: emptyList()
 
     private fun walkApply(v: View, hidden: Set<String>) {
         if (v.tag == TAG_OVERLAY) return
@@ -205,6 +226,7 @@ object ScanHideHooks {
     }
 
     fun showScanResultPanel(act: Activity) {
+        if (io.github.angbang852.manjiao.ui.miuix.InjectedScanPanel.showScanResults(act)) return
         try {
             if (panel?.isShowing == true) return
             val (d, box) = FrostedKit.dialog(act)

@@ -23,12 +23,14 @@ object SparkSettingsEntry {
     private const val TAG_RV = "kira_settings_rv"
     private const val RV_ID = 0x7f09181c
     private const val FRAGMENT_TAG = "settingListFragment"
+    private val retryCount = java.util.WeakHashMap<View, Int>()
 
     fun inject(activity: Activity) {
         try {
             val fm = (activity as? FragmentActivity)?.supportFragmentManager ?: return
             val fragment = fm.findFragmentByTag(FRAGMENT_TAG) ?: return
-            fragment.view?.let { inject(it, activity) }
+            val view = fragment.view ?: return
+            view.post { inject(view, activity) }
         } catch (t: Throwable) {
             Logger.d("spark settings entry activity miss: ${t.message}")
         }
@@ -36,19 +38,46 @@ object SparkSettingsEntry {
 
     fun inject(view: View, activity: Activity? = null) {
         try {
-            val rv = view.findViewById<RecyclerView>(RV_ID) ?: return
-            if (rv.tag == TAG_RV) return
-            val original = rv.adapter ?: return
+            val rv = view.findViewById<RecyclerView>(RV_ID) ?: findRecycler(view)
+            if (rv == null) {
+                retryLater(view, activity)
+                return
+            }
+            if (rv.adapter is ConcatAdapter) return
+            val original = rv.adapter
+            if (original == null) {
+                retryLater(view, activity)
+                return
+            }
             val ctx = view.context
             val header = HeaderAdapter(ctx) {
                 (activity ?: findActivity(ctx))?.let { MainMenuDialog.show(it) }
             }
             rv.adapter = ConcatAdapter(header, original)
             rv.tag = TAG_RV
-            Logger.d("spark settings header injected")
+            rv.post { rv.scrollToPosition(0) }
+            Logger.d("spark settings header injected adapter=${original.javaClass.name}")
         } catch (t: Throwable) {
             Logger.d("spark settings entry inject miss: ${t.message}")
         }
+    }
+
+    private fun retryLater(view: View, activity: Activity?) {
+        val n = retryCount[view] ?: 0
+        if (n >= 20) return
+        retryCount[view] = n + 1
+        view.postDelayed({ inject(view, activity) }, 150L)
+    }
+
+    private fun findRecycler(v: View): RecyclerView? {
+        if (v is RecyclerView) return v
+        if (v is ViewGroup) {
+            for (i in 0 until v.childCount) {
+                val r = findRecycler(v.getChildAt(i))
+                if (r != null) return r
+            }
+        }
+        return null
     }
 
     private fun findActivity(ctx: Context): Activity? {

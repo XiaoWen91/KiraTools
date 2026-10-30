@@ -233,6 +233,7 @@ class Module : XposedModule {
                     }
                     Logger.safe("share") { SharePanelHook.hook(this, cl) }
                     Logger.safe("spark") { io.github.angbang852.manjiao.hook.SparkHooks.hook(this, cl) }
+                    Logger.safe("unread") { io.github.angbang852.manjiao.hook.UnreadFloatButtonHook.hook(this, cl) }
                     Logger.once("boot.installed", "INSTALLED: spark")
                 } catch (t: Throwable) {
                     // ★ 2026-09：改 once 级别（不受 quiet 门控）。

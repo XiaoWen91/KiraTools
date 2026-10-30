@@ -148,13 +148,6 @@ private val menuCategories = listOf(
         "美化", "底栏、右侧、文案与播放 UI", Icons.Filled.Palette,
         groups = listOf(
             MenuGroup(
-                "底栏", "隐藏与透明度",
-                listOf(
-                    ToggleItem("隐藏底栏", "移除底栏 Tab", Prefs.K_BEAUTY_BOTTOM_HIDE, false),
-                    ToggleItem("底栏透明", "降低底栏不透明度", Prefs.K_BEAUTY_BOTTOM_TRANSPARENT, false),
-                )
-            ),
-            MenuGroup(
                 "视频页右侧", "右侧组件、全屏与金币",
                 listOf(
                     ToggleItem("隐藏右侧组件", "隐藏右侧操作栏", Prefs.K_BEAUTY_RIGHT_HIDE, false),
@@ -322,6 +315,20 @@ private fun InjectedScreen(act: Activity, dialog: Dialog) {
                 if (cat.title == "美化") {
                     item {
                         BasicComponent(
+                            title = "底栏",
+                            summary = "选择要隐藏的底栏项",
+                            startAction = { IconBadge(Icons.Filled.Menu) },
+                            endActions = {
+                                Icon(MiuixIcons.Basic.ArrowRight, contentDescription = "进入", modifier = Modifier.size(16.dp))
+                            },
+                            onClick = {
+                                dialog.dismiss()
+                                InjectedScanPanel.show(act, "底栏")
+                            },
+                        )
+                    }
+                    item {
+                        BasicComponent(
                             title = "区域透明度",
                             summary = "打开滑杆设置",
                             startAction = { IconBadge(Icons.Filled.Opacity) },
@@ -366,17 +373,15 @@ private fun InjectedScreen(act: Activity, dialog: Dialog) {
                 }
                 if (cat.title == "增强功能") {
                     item {
-                        BasicComponent(
-                            title = "清除全部未读（实验）",
-                            summary = "清除红点并尝试上报服务器",
-                            startAction = { IconBadge(Icons.Filled.MarkEmailRead) },
-                            endActions = {
-                                Icon(MiuixIcons.Basic.ArrowRight, contentDescription = "执行", modifier = Modifier.size(16.dp))
-                            },
-                            onClick = {
-                                Toast.makeText(act, "清除全部未读：服务端接口待接入", Toast.LENGTH_LONG).show()
-                            },
-                        )
+                        SectionCard {
+                            SmallTitle("私信浮窗")
+                            SwitchRow(
+                                "清除未读按钮",
+                                "开启后在私信加号浮窗显示清除未读按钮",
+                                Prefs.K_CLEAR_UNREAD_FLOAT,
+                                false,
+                            )
+                        }
                     }
                 }
             }

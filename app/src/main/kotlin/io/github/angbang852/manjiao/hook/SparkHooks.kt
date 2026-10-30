@@ -477,6 +477,17 @@ object SparkHooks {
                 if (view != null) SparkSettingsEntry.inject(view)
                 r
             }
+            val m2 = c.getDeclaredMethod(
+                "onViewCreated",
+                android.view.View::class.java,
+                android.os.Bundle::class.java
+            )
+            install(module, m2, "spark.settings.view") { chain ->
+                val r = chain.proceed()
+                val view = chain.getArg(0) as? android.view.View
+                if (view != null) view.post { SparkSettingsEntry.inject(view) }
+                r
+            }
         } catch (t: Throwable) {
             Logger.d("spark settings list entry miss: ${t.message}")
         }

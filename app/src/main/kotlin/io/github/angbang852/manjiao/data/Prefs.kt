@@ -53,6 +53,7 @@ object Prefs {
     const val K_SPARK_REAL_COUNT = "spark_real_count"
     const val K_SPARK_STEALTH_VISITOR = "spark_stealth_visitor"
     const val K_SPARK_AUTO_SENT = "spark_auto_sent"
+    const val K_CLEAR_UNREAD_FLOAT = "clear_unread_float"
 
     // ==================== 美化 ====================
     const val K_BEAUTY_DPI = "beauty_dpi"
