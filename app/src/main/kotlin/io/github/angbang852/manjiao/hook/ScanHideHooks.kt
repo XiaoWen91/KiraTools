@@ -24,6 +24,7 @@ object ScanHideHooks {
     private const val TAG_OVERLAY = "kira_scan_overlay"
     private val hiddenByUs = java.util.WeakHashMap<View, String>()
     private val originalVis = java.util.WeakHashMap<View, Int>()
+    private val layoutListeners = java.util.WeakHashMap<View, android.view.ViewTreeObserver.OnGlobalLayoutListener>()
     private var panel: Dialog? = null
 
     data class Elem(val token: String, val label: String, val x: Int, val y: Int, val w: Int, val h: Int)
@@ -41,6 +42,7 @@ object ScanHideHooks {
                             ActivityBridge.install(a)
                             val root = a.window?.decorView
                             apply(root)
+                            watch(root)
                             root?.postDelayed({ apply(root) }, 150L)
                             root?.postDelayed({ apply(root) }, 600L)
                             root?.postDelayed({ apply(root) }, 1200L)
@@ -88,6 +90,23 @@ object ScanHideHooks {
         }
     }
 
+    private fun watch(root: View?) {
+        if (root == null) return
+        if (layoutListeners.containsKey(root)) return
+        var scheduled = false
+        val listener = android.view.ViewTreeObserver.OnGlobalLayoutListener {
+            if (!scheduled) {
+                scheduled = true
+                root.postDelayed({
+                    scheduled = false
+                    apply(root)
+                }, 120L)
+            }
+        }
+        layoutListeners[root] = listener
+        root.viewTreeObserver.addOnGlobalLayoutListener(listener)
+    }
+
     fun scanCurrent(act: Activity): List<Elem> =
         act.window?.decorView?.let { scan(it) } ?: emptyList()
 
@@ -97,21 +116,38 @@ object ScanHideHooks {
         val isHidden = isHiddenToken(v, token, hidden)
         if (token.isNotEmpty()) {
             if (isHidden) {
-                if (!hiddenByUs.containsKey(v)) {
-                    originalVis[v] = v.visibility
-                    hiddenByUs[v] = token
+                hideView(v, token)
+                if (v is TextView) {
+                    val p = v.parent as? ViewGroup
+                    if (p != null && p.childCount in 1..6 && p !== v.rootView) hideView(p, token)
                 }
-                if (v.visibility != View.GONE) v.visibility = View.GONE
-            } else if (hiddenByUs.containsKey(v)) {
-                val ov = originalVis[v] ?: View.VISIBLE
-                if (v.visibility != ov) v.visibility = ov
-                hiddenByUs.remove(v)
-                originalVis.remove(v)
+            } else {
+                restoreView(v)
+                if (v is TextView) {
+                    val p = v.parent as? ViewGroup
+                    if (p != null && p !== v.rootView) restoreView(p)
+                }
             }
         }
         if (v is ViewGroup) {
             for (i in 0 until v.childCount) walkApply(v.getChildAt(i), hidden)
         }
+    }
+
+    private fun hideView(v: View, token: String) {
+        if (!hiddenByUs.containsKey(v)) {
+            originalVis[v] = v.visibility
+            hiddenByUs[v] = token
+        }
+        if (v.visibility != View.GONE) v.visibility = View.GONE
+    }
+
+    private fun restoreView(v: View) {
+        if (!hiddenByUs.containsKey(v)) return
+        val ov = originalVis[v] ?: View.VISIBLE
+        if (v.visibility != ov) v.visibility = ov
+        hiddenByUs.remove(v)
+        originalVis.remove(v)
     }
 
     fun showPanel(act: Activity) {
@@ -392,6 +428,8 @@ object ScanHideHooks {
                 if (n.isNotBlank()) return "id:$n"
             } catch (_: Throwable) {}
         }
+        val tag = v.tag
+        if (tag is String && tag.isNotBlank() && tag.length <= 40) return "tag:$tag"
         val desc = v.contentDescription?.toString()?.trim().orEmpty()
         if (desc.isNotEmpty() && desc.length <= 40) return "desc:$desc"
         if (v is TextView) {

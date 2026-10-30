@@ -20,7 +20,6 @@ import io.github.angbang852.manjiao.util.Logger
 
 /** 在快手设置页 RecyclerView 第一项注入 KiraTools 入口。 */
 object SparkSettingsEntry {
-    private const val TAG_RV = "kira_settings_rv"
     private const val RV_ID = 0x7f09181c
     private const val FRAGMENT_TAG = "settingListFragment"
     private val retryCount = java.util.WeakHashMap<View, Int>()
@@ -54,7 +53,6 @@ object SparkSettingsEntry {
                 (activity ?: findActivity(ctx))?.let { MainMenuDialog.show(it) }
             }
             rv.adapter = ConcatAdapter(header, original)
-            rv.tag = TAG_RV
             rv.post { rv.scrollToPosition(0) }
             Logger.d("spark settings header injected adapter=${original.javaClass.name}")
         } catch (t: Throwable) {
@@ -70,14 +68,16 @@ object SparkSettingsEntry {
     }
 
     private fun findRecycler(v: View): RecyclerView? {
-        if (v is RecyclerView) return v
+        val all = ArrayList<RecyclerView>()
+        collectRecyclers(v, all)
+        return all.firstOrNull { (it.adapter?.itemCount ?: 0) > 10 } ?: all.firstOrNull()
+    }
+
+    private fun collectRecyclers(v: View, out: MutableList<RecyclerView>) {
+        if (v is RecyclerView) out.add(v)
         if (v is ViewGroup) {
-            for (i in 0 until v.childCount) {
-                val r = findRecycler(v.getChildAt(i))
-                if (r != null) return r
-            }
+            for (i in 0 until v.childCount) collectRecyclers(v.getChildAt(i), out)
         }
-        return null
     }
 
     private fun findActivity(ctx: Context): Activity? {

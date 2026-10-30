@@ -111,7 +111,8 @@ private fun ScanScreen(act: Activity, dialog: Dialog, initialCategory: String?) 
     val ctx = LocalContext.current
     val dark = isSystemInDarkTheme()
     var hidden by remember { mutableStateOf(Prefs.str(Prefs.K_BEAUTY_HIDDEN_ELEMS, "")) }
-    val hiddenSet = hidden.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+    var order by remember { mutableStateOf(loadOrder(ctx)) }
+    val hiddenSet = hidden.split(",", "，", "\n").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
 
     fun toggle(token: String, on: Boolean) {
         val next = hiddenSet.toMutableSet()
@@ -120,6 +121,19 @@ private fun ScanScreen(act: Activity, dialog: Dialog, initialCategory: String?) 
         Prefs.setStrSync(ctx, Prefs.K_BEAUTY_HIDDEN_ELEMS, hidden)
         ScanHideHooks.apply(act.window?.decorView)
         act.window?.decorView?.postDelayed({ ScanHideHooks.apply(act.window?.decorView) }, 120L)
+    }
+
+    fun saveOrder(next: List<String>) {
+        order = next
+        Prefs.setStrSync(ctx, Prefs.K_BEAUTY_TAB_ORDER, next.joinToString(","))
+    }
+
+    fun moveUp(index: Int) {
+        if (index <= 0 || index >= order.size) return
+        val next = order.toMutableList()
+        val item = next.removeAt(index)
+        next.add(index - 1, item)
+        saveOrder(next)
     }
 
     LazyColumn(
@@ -162,14 +176,66 @@ private fun ScanScreen(act: Activity, dialog: Dialog, initialCategory: String?) 
         val cats = if (initialCategory != null) listOf(initialCategory) else listOf("顶栏", "底栏", "视频控件", "分享面板")
         cats.forEach { cat ->
             item { SmallTitle(cat) }
-            presetsFor(cat).forEach { label ->
-                val token = "text:$label"
-                item {
-                    SwitchPreference(
-                        title = label,
-                        checked = token in hiddenSet,
-                        onCheckedChange = { toggle(token, it) },
-                    )
+            item {
+                BasicComponent(
+                    title = "隐藏本区全部",
+                    summary = "勾选本区所有预设",
+                    onClick = {
+                        val labels = if (cat == "底栏") order else presetsFor(cat)
+                        val next = hiddenSet.toMutableSet()
+                        labels.forEach { next.add("text:$it") }
+                        hidden = next.joinToString(",")
+                        Prefs.setStrSync(ctx, Prefs.K_BEAUTY_HIDDEN_ELEMS, hidden)
+                        ScanHideHooks.apply(act.window?.decorView)
+                    },
+                )
+            }
+            item {
+                BasicComponent(
+                    title = "恢复本区",
+                    summary = "取消本区所有预设",
+                    onClick = {
+                        val labels = if (cat == "底栏") order else presetsFor(cat)
+                        val next = hiddenSet.toMutableSet()
+                        labels.forEach { next.remove("text:$it") }
+                        hidden = next.joinToString(",")
+                        Prefs.setStrSync(ctx, Prefs.K_BEAUTY_HIDDEN_ELEMS, hidden)
+                        ScanHideHooks.apply(act.window?.decorView)
+                    },
+                )
+            }
+            if (cat == "底栏") {
+                item { SmallTitle("底栏顺序（点击上移）") }
+                order.forEachIndexed { index, label ->
+                    item {
+                        BasicComponent(
+                            title = label,
+                            summary = "第 ${index + 1} 位，点击上移",
+                            onClick = { moveUp(index) },
+                        )
+                    }
+                }
+                item { SmallTitle("隐藏底栏项") }
+                order.forEach { label ->
+                    val token = "text:$label"
+                    item {
+                        SwitchPreference(
+                            title = label,
+                            checked = token in hiddenSet,
+                            onCheckedChange = { toggle(token, it) },
+                        )
+                    }
+                }
+            } else {
+                presetsFor(cat).forEach { label ->
+                    val token = "text:$label"
+                    item {
+                        SwitchPreference(
+                            title = label,
+                            checked = token in hiddenSet,
+                            onCheckedChange = { toggle(token, it) },
+                        )
+                    }
                 }
             }
         }
@@ -182,6 +248,14 @@ private fun ScanScreen(act: Activity, dialog: Dialog, initialCategory: String?) 
             )
         }
     }
+}
+
+private fun loadOrder(ctx: android.content.Context): List<String> {
+    val def = presetsFor("底栏")
+    val raw = Prefs.str(Prefs.K_BEAUTY_TAB_ORDER, def.joinToString(","))
+    val parsed = raw.split(",", "，", "\n").map { it.trim() }.filter { it.isNotEmpty() }
+    val missing = def.filter { it !in parsed }
+    return parsed + missing
 }
 
 @Composable

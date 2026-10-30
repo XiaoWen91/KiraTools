@@ -465,6 +465,16 @@ object SparkHooks {
                 if (self is Activity) SparkSettingsEntry.inject(self)
                 r
             }
+            val m2 = c.getDeclaredMethod("onResume")
+            install(module, m2, "spark.settings.resume") { chain ->
+                val r = chain.proceed()
+                val self = chain.thisObject
+                if (self is Activity) {
+                    self.window?.decorView?.postDelayed({ SparkSettingsEntry.inject(self) }, 300L)
+                    self.window?.decorView?.postDelayed({ SparkSettingsEntry.inject(self) }, 1000L)
+                }
+                r
+            }
         } catch (t: Throwable) {
             Logger.d("spark settings entry miss: ${t.message}")
         }

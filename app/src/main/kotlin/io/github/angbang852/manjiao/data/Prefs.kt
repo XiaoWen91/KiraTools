@@ -79,6 +79,7 @@ object Prefs {
     const val K_BEAUTY_FORCE_IP = "beauty_force_ip"
     const val K_BEAUTY_OFFICIAL_DATE = "beauty_official_date"
     const val K_BEAUTY_HIDDEN_ELEMS = "beauty_hidden_elems"
+    const val K_BEAUTY_TAB_ORDER = "beauty_tab_order"
     const val K_BEAUTY_BOTTOM_AUTO = "beauty_bottom_auto"
     const val K_BEAUTY_ALPHA_PAUSE_RESET = "beauty_alpha_pause_reset"
     const val K_BEAUTY_SHARE_HIDE = "beauty_share_hide"
