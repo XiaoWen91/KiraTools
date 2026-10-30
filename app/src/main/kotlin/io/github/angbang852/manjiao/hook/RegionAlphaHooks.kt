@@ -192,10 +192,10 @@ object RegionAlphaHooks {
     fun apply(root: View?) {
         if (root == null) return
         if (isCommentOrMessageShown(root)) return
-        if (!hasVideoMarker(root)) return
         lastRoot = java.lang.ref.WeakReference(root)
         try {
-            applyKnown(root)
+            val appliedNow = applyKnown(root)
+            walk(root, PlaybackState.isPlaying(), Prefs.bool(Prefs.K_BEAUTY_ALPHA_PAUSE_RESET, false), appliedNow)
         } catch (t: Throwable) {
             Logger.d("kira region alpha apply miss: ${t.message}")
         }

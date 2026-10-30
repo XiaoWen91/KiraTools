@@ -59,7 +59,7 @@ object BeautifyUi {
             setPadding(dp(ctx, 8), 0, dp(ctx, 8), dp(ctx, 8))
         }
 
-    private fun buildBottom(ctx: Context): LinearLayout {
+    fun buildBottom(ctx: Context): LinearLayout {
         val root = page(ctx)
         root.addView(section(ctx, "底栏"))
         root.addView(row(ctx, "隐藏组件", value(ctx, Prefs.K_BEAUTY_BOTTOM_HIDE, "未设置")) {

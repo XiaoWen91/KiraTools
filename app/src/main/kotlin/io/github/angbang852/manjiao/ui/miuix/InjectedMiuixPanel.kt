@@ -329,6 +329,24 @@ private fun InjectedScreen(act: Activity, dialog: Dialog) {
                     }
                     item {
                         BasicComponent(
+                            title = "替换底栏文字",
+                            summary = "设置底栏各 Tab 显示文字",
+                            startAction = { IconBadge(Icons.Filled.Edit) },
+                            endActions = {
+                                Icon(MiuixIcons.Basic.ArrowRight, contentDescription = "进入", modifier = Modifier.size(16.dp))
+                            },
+                            onClick = {
+                                dialog.dismiss()
+                                io.github.angbang852.manjiao.ui.MainMenuDialog.showBeautifySub(
+                                    act,
+                                    "底栏",
+                                    io.github.angbang852.manjiao.ui.BeautifyUi.buildBottom(act)
+                                )
+                            },
+                        )
+                    }
+                    item {
+                        BasicComponent(
                             title = "区域透明度",
                             summary = "打开滑杆设置",
                             startAction = { IconBadge(Icons.Filled.Opacity) },

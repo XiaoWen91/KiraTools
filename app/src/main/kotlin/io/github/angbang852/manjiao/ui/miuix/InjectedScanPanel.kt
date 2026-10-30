@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -29,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.angbang852.manjiao.data.Prefs
 import io.github.angbang852.manjiao.hook.ScanHideHooks
+import io.github.angbang852.manjiao.hook.BeautifyHooks
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
@@ -111,6 +113,7 @@ private fun ScanScreen(act: Activity, dialog: Dialog, initialCategory: String?) 
     val ctx = LocalContext.current
     val dark = isSystemInDarkTheme()
     var hidden by remember { mutableStateOf(Prefs.str(Prefs.K_BEAUTY_HIDDEN_ELEMS, "")) }
+    var bottomHidden by remember { mutableStateOf(Prefs.str(Prefs.K_BEAUTY_BOTTOM_HIDE, "")) }
     var order by remember { mutableStateOf(loadOrder(ctx)) }
     val hiddenSet = hidden.split(",", "，", "\n").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
 
@@ -137,7 +140,7 @@ private fun ScanScreen(act: Activity, dialog: Dialog, initialCategory: String?) 
     }
 
     LazyColumn(
-        Modifier.fillMaxWidth()
+        Modifier.fillMaxWidth().heightIn(max=420.dp)
             .clip(RoundedCornerShape(22.dp))
             .background(if (dark) Color(0xFF1C1C1E) else Color.White)
             .padding(20.dp)
@@ -205,24 +208,25 @@ private fun ScanScreen(act: Activity, dialog: Dialog, initialCategory: String?) 
                 )
             }
             if (cat == "底栏") {
-                item { SmallTitle("底栏顺序（点击上移）") }
-                order.forEachIndexed { index, label ->
-                    item {
-                        BasicComponent(
-                            title = label,
-                            summary = "第 ${index + 1} 位，点击上移",
-                            onClick = { moveUp(index) },
-                        )
-                    }
-                }
+                val bottomSet = bottomHidden.split(",", "，", "\n").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
                 item { SmallTitle("隐藏底栏项") }
-                order.forEach { label ->
-                    val token = "text:$label"
+                presetsFor("底栏").forEach { label ->
                     item {
                         SwitchPreference(
                             title = label,
-                            checked = token in hiddenSet,
-                            onCheckedChange = { toggle(token, it) },
+                            checked = label in bottomSet,
+                            onCheckedChange = { on ->
+                                val next = bottomSet.toMutableSet()
+                                if (on) next.add(label) else next.remove(label)
+                                bottomHidden = next.joinToString(",")
+                                Prefs.setStrSync(ctx, Prefs.K_BEAUTY_BOTTOM_HIDE, bottomHidden)
+                                BeautifyHooks.reapply()
+                                ScanHideHooks.apply(act.window?.decorView)
+                                act.window?.decorView?.postDelayed({
+                                    BeautifyHooks.reapply()
+                                    ScanHideHooks.apply(act.window?.decorView)
+                                }, 120L)
+                            },
                         )
                     }
                 }

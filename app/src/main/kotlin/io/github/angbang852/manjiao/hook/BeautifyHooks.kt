@@ -357,7 +357,13 @@ object BeautifyHooks {
             if (old.isBlank()) old = labelFromF(self)
             val hide = hidden(Prefs.str(Prefs.K_BEAUTY_BOTTOM_HIDE, ""), old)
             val repl = replace(Prefs.str(Prefs.K_BEAUTY_BOTTOM_TEXT, ""), old)
-            if (!hide && repl != old) {
+            if (hide) {
+                if (self.visibility != View.GONE) self.visibility = View.GONE
+                (self.parent as? ViewGroup)?.requestLayout()
+                return
+            }
+            if (self.visibility != View.VISIBLE) self.visibility = View.VISIBLE
+            if (repl != old) {
                 gf?.set(self, repl)
                 tv?.text = repl
             }

@@ -116,22 +116,36 @@ object ScanHideHooks {
         val isHidden = isHiddenToken(v, token, hidden)
         if (token.isNotEmpty()) {
             if (isHidden) {
-                hideView(v, token)
-                if (v is TextView) {
-                    val p = v.parent as? ViewGroup
-                    if (p != null && p.childCount in 1..6 && p !== v.rootView) hideView(p, token)
-                }
+                val target = findHideTarget(v)
+                hideView(target, token)
+                if (target !== v) hideView(v, token)
             } else {
                 restoreView(v)
-                if (v is TextView) {
-                    val p = v.parent as? ViewGroup
-                    if (p != null && p !== v.rootView) restoreView(p)
+                var p = v.parent as? ViewGroup
+                var depth = 0
+                while (p != null && depth < 4) {
+                    restoreView(p)
+                    p = p.parent as? ViewGroup
+                    depth++
                 }
             }
         }
         if (v is ViewGroup) {
             for (i in 0 until v.childCount) walkApply(v.getChildAt(i), hidden)
         }
+    }
+
+    private fun findHideTarget(v: View): View {
+        var cur: View = v
+        var depth = 0
+        while (depth < 4) {
+            val p = cur.parent as? ViewGroup ?: break
+            if (p === v.rootView) break
+            if (p.isClickable || p.childCount <= 8) return p
+            cur = p
+            depth++
+        }
+        return v
     }
 
     private fun hideView(v: View, token: String) {
