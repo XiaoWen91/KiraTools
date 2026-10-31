@@ -306,14 +306,13 @@ object RegionAlphaHooks {
     }
 
     private fun regionKey(v: View): String {
-        val cls = v.javaClass.name.lowercase()
-        val id = resName(v)?.lowercase().orEmpty()
-        if (id.contains("comment") || id.contains("message") || cls.contains("comment") || cls.contains("message")) return ""
-        if (cls.contains("captiontextview") || cls.contains("usernamelinearlayout") || id.contains("caption") || id.contains("username")) return Prefs.K_BEAUTY_ALPHA_TEXT
-        if (id == "bottom_bar_container" || id == "bottom_bar" || id == "bottom_bar_shoot") return Prefs.K_BEAUTY_ALPHA_BOTTOM
-        if (id == "right_action_group" || id == "group_right_action_bar_root_layout" || id == "right_action_bar") return Prefs.K_BEAUTY_ALPHA_RIGHT
-        if (id == "top_bar_container" || id == "alpha_top_bar" || id == "title_root") return Prefs.K_BEAUTY_ALPHA_TOP
-        return ""
+        return when (KiriQ2.regionKey(v)) {
+            "alpha_top_bar" -> Prefs.K_BEAUTY_ALPHA_TOP
+            "alpha_right_bar" -> Prefs.K_BEAUTY_ALPHA_RIGHT
+            "alpha_left_info" -> Prefs.K_BEAUTY_ALPHA_TEXT
+            "alpha_bottom_bar" -> Prefs.K_BEAUTY_ALPHA_BOTTOM
+            else -> ""
+        }
     }
 
     private fun alpha(key: String): Float {

@@ -404,13 +404,7 @@ object ScanHideHooks {
     }
 
     private fun scan(root: View): List<Elem> {
-        val out = ArrayList<Elem>()
-        val rootArea = root.width.coerceAtLeast(1) * root.height.coerceAtLeast(1)
-        val seenToken = HashSet<String>()
-        val seenRect = HashSet<String>()
-        collect(root, rootArea, out, seenToken, seenRect)
-        out.sortByDescending { it.w * it.h }
-        return out.take(200)
+        return KiriQ2.scan(root).map { Elem(it.token, it.label, it.x, it.y, it.w, it.h) }
     }
 
     private fun collect(v: View, rootArea: Int, out: MutableList<Elem>, seenToken: MutableSet<String>, seenRect: MutableSet<String>) {
@@ -434,24 +428,7 @@ object ScanHideHooks {
         }
     }
 
-    private fun tokenFor(v: View): String {
-        val id = v.id
-        if (id != 0 && id != View.NO_ID) {
-            try {
-                val n = v.resources.getResourceEntryName(id)
-                if (n.isNotBlank()) return "id:$n"
-            } catch (_: Throwable) {}
-        }
-        val tag = v.tag
-        if (tag is String && tag.isNotBlank() && tag.length <= 40) return "tag:$tag"
-        val desc = v.contentDescription?.toString()?.trim().orEmpty()
-        if (desc.isNotEmpty() && desc.length <= 40) return "desc:$desc"
-        if (v is TextView) {
-            val t = v.text?.toString()?.trim().orEmpty()
-            if (t.isNotEmpty() && t.length <= 30) return "text:$t"
-        }
-        return "cls:" + v.javaClass.name
-    }
+    private fun tokenFor(v: View): String = KiriQ2.tokenFor(v) ?: ""
 
     private fun labelFor(v: View): String {
         if (v is TextView) {
@@ -471,7 +448,11 @@ object ScanHideHooks {
     }
 
     private fun hiddenSet(): Set<String> =
-        Prefs.str(Prefs.K_BEAUTY_HIDDEN_ELEMS, "").split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+        Prefs.str(Prefs.K_BEAUTY_HIDDEN_ELEMS, "")
+            .split(",", "，", "\n")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .toSet()
 
     private fun setHidden(ctx: android.content.Context, token: String, hide: Boolean) {
         val set = hiddenSet().toMutableSet()

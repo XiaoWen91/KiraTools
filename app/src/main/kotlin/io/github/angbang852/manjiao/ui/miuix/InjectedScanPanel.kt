@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import io.github.angbang852.manjiao.data.Prefs
 import io.github.angbang852.manjiao.hook.ScanHideHooks
 import io.github.angbang852.manjiao.hook.BeautifyHooks
+import io.github.angbang852.manjiao.hook.KiriQ2
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
@@ -226,6 +227,25 @@ private fun ScanScreen(act: Activity, dialog: Dialog, initialCategory: String?) 
                                     BeautifyHooks.reapply()
                                     ScanHideHooks.apply(act.window?.decorView)
                                 }, 120L)
+                            },
+                        )
+                    }
+                }
+            } else if (cat == "视频控件") {
+                KiriQ2.controls.forEach { c ->
+                    val tokens = c.idNames.map { "id:$it" }
+                    val checked = tokens.any { it in hiddenSet }
+                    item {
+                        SwitchPreference(
+                            title = c.label,
+                            checked = checked,
+                            onCheckedChange = { on ->
+                                val next = hiddenSet.toMutableSet()
+                                if (on) tokens.forEach { next.add(it) } else tokens.forEach { next.remove(it) }
+                                hidden = next.joinToString(",")
+                                Prefs.setStrSync(ctx, Prefs.K_BEAUTY_HIDDEN_ELEMS, hidden)
+                                ScanHideHooks.apply(act.window?.decorView)
+                                act.window?.decorView?.postDelayed({ ScanHideHooks.apply(act.window?.decorView) }, 120L)
                             },
                         )
                     }
